@@ -111,6 +111,51 @@ public class Opts {
 		return this;
 	}
 
+	// and now all the same for stderr
+
+	public Opts err(OutputStream newErrput) {
+		this.err = newErrput;
+		return this;
+	}
+
+	/**
+	 * Provide a collection to drain output of the command into.
+	 * <p>
+	 * If you're going to wait for the process to finish, any old collection is fine
+	 * here. If you want to read out of this before waiting for the process to finish,
+	 * you're gonna want to use a thread-safe queue; ConcurrentLinkedQueue is a
+	 * reasonable option.
+	 */
+	public Opts err(Collection<String> newErrput) {
+		this.err = new OutputStringer(newErrput);
+		return this;
+	}
+
+	public Opts err(OutputStringer newErrput) {
+		this.err = newErrput;
+		return this;
+	}
+
+	//public Opts errBytes(Collection<byte[]> newErrput) {
+	//	this.out = new OutputChunker(newErrput);
+	//	return this;
+	//}
+	//
+	//public Opts errBytes(OutputChunker newErrput) {
+	//	this.out = newErrput;
+	//	return this;
+	//}
+
+	public Opts err_null() {
+		this.err = new ClosedOutputStream();
+		return this;
+	}
+
+	public Opts err_pass() {
+		this.err = System.err;
+		return this;
+	}
+
 
 
 	public static class OutputStringer extends OutputStream {
