@@ -8,7 +8,6 @@ import java.util.*;
 public class Opts {
 	// any of these fields may be null for "leave it"
 
-	public File cwd;
 
 	/**
 	 * Can be a:

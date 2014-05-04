@@ -17,6 +17,7 @@ public class Josh {
 		this.cmd = cmd;
 		this.args = Collections.emptyList();
 		this.env = Collections.emptyMap(); // may want to use null to indicate passthru.  but no, just load it, otherwise mutation is pants.
+		this.cwd = null;
 		this.opts = new Opts();
 	}
 
@@ -24,6 +25,7 @@ public class Josh {
 		this.cmd = cpy.cmd;
 		this.args = cpy.args;
 		this.env = cpy.env;
+		this.cwd = cpy.cwd;
 		this.opts = cpy.opts;
 	}
 
@@ -32,6 +34,7 @@ public class Josh {
 	private String cmd;
 	private List<String> args;
 	private Map<String,String> env;
+	private File cwd; // null will cause inherit
 	private Opts opts;
 
 	public Josh args(String... moreArgs) {
@@ -75,6 +78,12 @@ public class Josh {
 		return next;
 	}
 
+	public Josh cwd(File newCwd) {
+		Josh next = new Josh(this);
+		next.cwd = newCwd;
+		return next;
+	}
+
 	public Future<Integer> start() throws IOException {
 		String[] cmdarray = new String[args.size()+1];
 		cmdarray[0] = cmd;
@@ -84,7 +93,7 @@ public class Josh {
 		int i = 0;
 		for (Map.Entry<String,String> pair : env.entrySet())
 			envp[i++] = pair.getKey()+"="+pair.getValue();
-		final Process proc = Runtime.getRuntime().exec(cmdarray, envp, opts.cwd);
+		final Process proc = Runtime.getRuntime().exec(cmdarray, envp, cwd);
 		// going through a ProcessBuilder will enable some cheats that will probably make output to a file faster (fewer memcpy).
 		// but it doesn't *actually* let you connect the real system (glhf getting a tty through).
 		// and it won't help a bit for in-process.  you still have to launch a bunch of shitty threads to do shitty blocking io.
