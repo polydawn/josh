@@ -26,6 +26,18 @@ public class Opts {
 		this.err = cpy.err;
 	}
 
+	public InputStream in() {
+		return in;
+	}
+
+	public OutputStream out() {
+		return out;
+	}
+
+	public OutputStream err() {
+		return err;
+	}
+
 	// any of these fields may be null for "leave it"
 
 	/**
@@ -38,7 +50,7 @@ public class Opts {
 	 *   - <-chan byte[], in which case that will be streamed in
 	 *   - another Command, in which case that will be started with this one and its output piped into this one
 	 */
-	public InputStream in;
+	InputStream in;
 
 	/**
 	 * Can be a:
@@ -50,9 +62,9 @@ public class Opts {
 	 * (There's nothing that's quite the equivalent of how you can give In a string, sadly; since
 	 * strings are immutable in golang, you can't set Out=&str and get anywhere.)
 	 */
-	public OutputStream out;
+	OutputStream out;
 
-	public OutputStream err;
+	OutputStream err;
 
 	/**
 	 * Exit status codes that are to be considered "successful".  If not provided, [0] is the default.
