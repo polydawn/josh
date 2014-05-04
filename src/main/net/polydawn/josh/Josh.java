@@ -16,7 +16,7 @@ public class Josh {
 	public Josh(String cmd) {
 		this.cmd = cmd;
 		this.args = Collections.emptyList();
-		this.env = Collections.emptyMap(); // may want to use null to indicate passthru.  but no, just load it, otherwise mutation is pants.
+		this.env = Collections.unmodifiableMap(System.getenv());
 		this.cwd = null;
 		this.opts = Opts.DefaultIO;
 	}
