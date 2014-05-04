@@ -1,6 +1,7 @@
 package net.polydawn.josh;
 
 import java.io.*;
+import java.nio.*;
 import java.nio.charset.*;
 import java.util.*;
 
@@ -46,6 +47,11 @@ public class Opts {
 		return this;
 	}
 
+	public Opts in(Queue<String> newInput) {
+		this.in = new InputStringer(newInput);
+		return this;
+	}
+
 	public Opts in(byte[] newInput) {
 		this.in = new ByteArrayInputStream(newInput);
 		return this;
@@ -64,6 +70,49 @@ public class Opts {
 	public Opts in_pass() {
 		this.in = System.in;
 		return this;
+	}
+
+	static class InputStringer extends InputStream {
+		public InputStringer(Queue<String> source) {
+			// maybe Streams from java8 are actually what would best fulfill my dreams here
+			this.source = source;
+			this.buffer = ByteBuffer.wrap(new byte[0]);
+		}
+
+		private final Queue<String> source;
+		private ByteBuffer buffer;
+
+		private boolean pump() {
+			if (!buffer.hasRemaining()) {
+				if (source.isEmpty()) return false;
+				buffer = ByteBuffer.wrap(source.poll().getBytes(Charset.forName("UTF-8")));
+			}
+			return true;
+		}
+
+		public int available() throws IOException {
+			return buffer.remaining();
+		}
+
+		public int read() throws IOException {
+			if (!pump()) return -1;
+			return buffer.get();
+		}
+
+		public int read(byte[] b) throws IOException {
+			return read(b, 0, b.length);
+		}
+
+		public int read(byte[] b, int off, int len) throws IOException {
+			if (!pump()) return -1;
+			int readSize = Math.min(len, available());
+			buffer.get(b, off, readSize);
+			return readSize;
+		}
+
+		public void close() throws IOException {
+			super.close();
+		}
 	}
 
 	// it's really embarassing how golang had all these awesome options for getting data back out, and in java it's kinda fuck you.
