@@ -66,12 +66,6 @@ public class Opts {
 
 	OutputStream err;
 
-	/**
-	 * Exit status codes that are to be considered "successful".  If not provided, [0] is the default.
-	 * (If this slice is provided, zero will -not- be considered a success code unless explicitly included.)
-	 */
-	public List<Byte> okExit;
-
 	public Opts in(String newInput) {
 		this.in = new ByteArrayInputStream(newInput.getBytes(Charset.forName("UTF-8")));
 		return this;

@@ -19,6 +19,7 @@ public class Josh {
 		this.env = Collections.unmodifiableMap(System.getenv());
 		this.cwd = null;
 		this.opts = Opts.DefaultIO;
+		this.okExit = Collections.unmodifiableList(Arrays.asList(new Integer[] {0}));
 	}
 
 	private Josh(Josh cpy) {
@@ -27,6 +28,7 @@ public class Josh {
 		this.env = cpy.env;
 		this.cwd = cpy.cwd;
 		this.opts = cpy.opts;
+		this.okExit = cpy.okExit;
 	}
 
 	// treat all fields as final, i just can't be arsed to make enough copy constructors to have them actually be so.
@@ -36,6 +38,12 @@ public class Josh {
 	private Map<String,String> env;
 	private File cwd; // null will cause inherit
 	private Opts opts;
+
+	/**
+	 * Exit status codes that are to be considered "successful".  If not provided, [0] is the default.
+	 * (If this slice is provided, zero will -not- be considered a success code unless explicitly included.)
+	 */
+	private List<Integer> okExit;
 
 	public Josh args(String... moreArgs) {
 		Josh next = new Josh(this);
@@ -103,6 +111,19 @@ public class Josh {
 		return next;
 	}
 
+	public Josh okExit(int... newOkExit) {
+		Integer[] z = new Integer[newOkExit.length];
+		for (int y = 0; y < newOkExit.length; y++)
+			z[y] = newOkExit[y];
+		return okExit(z);
+	}
+
+	public Josh okExit(Integer... newOkExit) {
+		Josh next = new Josh(this);
+		next.okExit = Collections.unmodifiableList(Arrays.asList(newOkExit));
+		return next;
+	}
+
 	public Future<Integer> start() throws IOException {
 		String[] cmdarray = new String[args.size()+1];
 		cmdarray[0] = cmd;
@@ -122,7 +143,10 @@ public class Josh {
 		if (opts.err != null) iocopy(proc.getErrorStream(), opts.err);
 		FutureTask<Integer> answer = new FutureTask<Integer>(new Callable<Integer>() {
 			public Integer call() throws Exception {
-				return proc.waitFor();
+				int exitCode = proc.waitFor();
+				if (!okExit.contains(exitCode))
+					throw new ExecutionException("executing \""+cmd+"\" returned code "+exitCode, null);
+				return exitCode;
 			}
 		});
 		new Thread(answer).start();
