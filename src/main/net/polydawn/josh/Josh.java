@@ -102,6 +102,14 @@ public class Josh {
 	}
 
 	private static void iocopy(final InputStream in, final OutputStream out) {
+		if (out instanceof Opts.ClosedOutputStream) {
+			try {
+				in.close();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			return;
+		}
 		new Thread() { public void run() {
 			try {
 				byte[] buf = new byte[1024*8]; int k;
@@ -111,6 +119,11 @@ public class Josh {
 				out.close();
 			} catch (IOException e) {
 				e.printStackTrace();
+				try {
+					in.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
 			}
 		}}.start();
 	}

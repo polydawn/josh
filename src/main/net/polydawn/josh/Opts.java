@@ -68,17 +68,64 @@ public class Opts {
 
 	// it's really embarassing how golang had all these awesome options for getting data back out, and in java it's kinda fuck you.
 
+	public Opts out(OutputStream newOutput) {
+		this.out = newOutput;
+		return this;
+	}
+
+	/**
+	 * Provide a collection to drain output of the command into.
+	 * <p>
+	 * If you're going to wait for the process to finish, any old collection is fine
+	 * here. If you want to read out of this before waiting for the process to finish,
+	 * you're gonna want to use a thread-safe queue; ConcurrentLinkedQueue is a
+	 * reasonable option.
+	 */
 	public Opts out(Collection<String> newOutput) {
-		this.out = new OutputStringer(newOutput, false);
+		this.out = new OutputStringer(newOutput);
+		return this;
+	}
+
+	public Opts out(OutputStringer newOutput) {
+		this.out = newOutput;
+		return this;
+	}
+
+	//public Opts outBytes(Collection<byte[]> newOutput) {
+	//	this.out = new OutputChunker(newOutput);
+	//	return this;
+	//}
+	//
+	//public Opts outBytes(OutputChunker newOutput) {
+	//	this.out = newOutput;
+	//	return this;
+	//}
+
+	public Opts out_null() {
+		this.out = new ClosedOutputStream();
+		return this;
+	}
+
+	public Opts out_pass() {
+		this.out = System.out;
 		return this;
 	}
 
 
 
-	private static class OutputStringer extends OutputStream {
+	public static class OutputStringer extends OutputStream {
+		public OutputStringer(Collection<String> sink) {
+			this(sink, false);
+		}
+
 		public OutputStringer(Collection<String> sink, boolean breakOnFlush) {
+			this(sink, breakOnFlush, (byte) '\n');
+		}
+
+		public OutputStringer(Collection<String> sink, boolean breakOnFlush, byte breakByte) {
 			this.sink = sink;
 			this.breakOnFlush = breakOnFlush;
+			this.breakByte = breakByte;
 			this.buffer = new ByteArrayOutputStream();
 		}
 
@@ -86,18 +133,22 @@ public class Opts {
 
 		/**
 		 * If true, outputs a string every time a flush() is invoked; if false,
-		 * ignores flush() and outputs a string every time a "\n" is encountered.
+		 * ignores flush() and outputs a string every time a {@link #breakByte} is
+		 * encountered.
 		 *
-		 * Regardless "\n" characters will not be stripped, because we're not
-		 * insanely hostile to the concept of output being comparable to input.
+		 * Regardless {@link #breakByte} characters will not be stripped, because
+		 * we're not insanely hostile to the concept of output being comparable to
+		 * input (I'm looking at you, {@link BufferedReader#readLine()}).
 		 */
 		private final boolean breakOnFlush;
+
+		private final byte breakByte;
 
 		private final ByteArrayOutputStream buffer;
 
 		public void write(int b) throws IOException {
 			buffer.write(b);
-			if (!breakOnFlush && b == '\n')
+			if (!breakOnFlush && b == breakByte)
 				push();
 		}
 
@@ -117,7 +168,7 @@ public class Opts {
 				for (int i = 0; i < len; i++) {
 					byte a = b[off + i];
 					write(a);
-					if (a == '\n')
+					if (a == breakByte)
 						push();
 				}
 			}
@@ -142,5 +193,29 @@ public class Opts {
 		public void close() throws IOException {
 			push();
 		}
+	}
+
+
+
+	static class ClosedOutputStream extends OutputStream {
+		// be nice if there was a predicate for, oh, i don't know, isClosed().
+		// but I guess the command runner will have to catch these and silently close the process's stream.
+		// ohwait, no, that's a race and stupid.  sigh, fuckit, we'll just instanceof on this.
+
+		public void write(int b) throws IOException {
+			throw new IOException("closed");
+		}
+
+		public void write(byte[] b) throws IOException {
+			throw new IOException("closed");
+		}
+
+		public void write(byte[] b, int off, int len) throws IOException {
+			throw new IOException("closed");
+		}
+
+		public void flush() throws IOException {}
+
+		public void close() throws IOException {}
 	}
 }
