@@ -72,6 +72,16 @@ public class Josh {
 		return next;
 	}
 
+	public Josh filterEnv(Collection<String> allowedKeys) {
+		Josh next = new Josh(this);
+		Map<String,String> envNext = new HashMap<String,String>();
+		for (Map.Entry<String,String> pair : this.env.entrySet())
+			if (allowedKeys.contains(pair.getKey()))
+				envNext.put(pair.getKey(), pair.getValue());
+		next.env = Collections.unmodifiableMap(envNext);
+		return next;
+	}
+
 	public Josh clearEnv() {
 		Josh next = new Josh(this);
 		next.env = Collections.emptyMap();
