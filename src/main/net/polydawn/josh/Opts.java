@@ -67,4 +67,80 @@ public class Opts {
 	}
 
 	// it's really embarassing how golang had all these awesome options for getting data back out, and in java it's kinda fuck you.
+
+	public Opts out(Collection<String> newOutput) {
+		this.out = new OutputStringer(newOutput, false);
+		return this;
+	}
+
+
+
+	private static class OutputStringer extends OutputStream {
+		public OutputStringer(Collection<String> sink, boolean breakOnFlush) {
+			this.sink = sink;
+			this.breakOnFlush = breakOnFlush;
+			this.buffer = new ByteArrayOutputStream();
+		}
+
+		private final Collection<String> sink;
+
+		/**
+		 * If true, outputs a string every time a flush() is invoked; if false,
+		 * ignores flush() and outputs a string every time a "\n" is encountered.
+		 *
+		 * Regardless "\n" characters will not be stripped, because we're not
+		 * insanely hostile to the concept of output being comparable to input.
+		 */
+		private final boolean breakOnFlush;
+
+		private final ByteArrayOutputStream buffer;
+
+		public void write(int b) throws IOException {
+			buffer.write(b);
+			if (!breakOnFlush && b == '\n')
+				push();
+		}
+
+		// zero guarantees about the efficiency of all this.  java's stdlib for handling rows of bytes is one of
+		// the most monstrous survivors of the 90s and trying to fix it is like trying to cut a new sluice through
+		// the three gorges dam with tacky grill ignitor from the dollar store.
+		public void write(byte b[], int off, int len) throws IOException {
+			if (b == null)
+				throw new NullPointerException();
+			if ((off < 0) || (off > b.length) || (len < 0) || ((off + len) > b.length) || ((off + len) < 0))
+				throw new IndexOutOfBoundsException();
+			if (len == 0)
+				return;
+			if (breakOnFlush) {
+				buffer.write(b, off, len);
+			} else {
+				for (int i = 0; i < len; i++) {
+					byte a = b[off + i];
+					write(a);
+					if (a == '\n')
+						push();
+				}
+			}
+		}
+
+		private void push() {
+			try {
+				sink.add(buffer.toString("UTF-8"));
+			} catch (UnsupportedEncodingException e) {
+				throw new Error(e);
+			}
+			buffer.reset();
+			// if BAOS was a less completely shit abstraction i might ask it to shrink in case it's a gig, but, welp.
+			// someday some saint should make a halfway decent byte rope implementation.
+		}
+
+		public void flush() throws IOException {
+			if (breakOnFlush)
+				push();
+		}
+
+		public void close() throws IOException {
+			push();
+		}
+	}
 }
