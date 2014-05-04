@@ -6,8 +6,27 @@ import java.nio.charset.*;
 import java.util.*;
 
 public class Opts {
-	// any of these fields may be null for "leave it"
+	public Opts() {}
 
+	public static final Opts DefaultIO = new Opts() {{
+		in_pass();
+		out_pass();
+		err_pass();
+	}};
+
+	public static final Opts NullIO = new Opts() {{
+		in_null();
+		out_null();
+		err_null();
+	}};
+
+	public Opts(Opts cpy) {
+		this.in = cpy.in;
+		this.out = cpy.out;
+		this.err = cpy.err;
+	}
+
+	// any of these fields may be null for "leave it"
 
 	/**
 	 * Can be a:

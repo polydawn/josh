@@ -18,7 +18,7 @@ public class Josh {
 		this.args = Collections.emptyList();
 		this.env = Collections.emptyMap(); // may want to use null to indicate passthru.  but no, just load it, otherwise mutation is pants.
 		this.cwd = null;
-		this.opts = new Opts();
+		this.opts = Opts.DefaultIO;
 	}
 
 	private Josh(Josh cpy) {
@@ -81,6 +81,15 @@ public class Josh {
 	public Josh cwd(File newCwd) {
 		Josh next = new Josh(this);
 		next.cwd = newCwd;
+		return next;
+	}
+
+	public Josh opts(Opts newOpts) {
+		Josh next = new Josh(this);
+		next.opts = new Opts(this.opts);
+		if (newOpts.in != null) next.opts.in = newOpts.in;
+		if (newOpts.out != null) next.opts.out = newOpts.out;
+		if (newOpts.err != null) next.opts.err = newOpts.err;
 		return next;
 	}
 
