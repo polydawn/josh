@@ -197,7 +197,13 @@ public class Opts {
 		}
 
 		public String toString() {
-			return this.delegate.toString();
+			StringBuilder builder = new StringBuilder();
+			builder.append("UnclosableInputStreamProxy[delegate=");
+			builder.append(this.delegate);
+			builder.append(", closed=");
+			builder.append(this.closed);
+			builder.append("]");
+			return builder.toString();
 		}
 
 		public int available() throws IOException {
@@ -459,7 +465,11 @@ public class Opts {
 		}
 
 		public String toString() {
-			return this.delegate.toString();
+			StringBuilder builder = new StringBuilder();
+			builder.append("UnclosableOutputStreamProxy[delegate=");
+			builder.append(this.delegate);
+			builder.append("]");
+			return builder.toString();
 		}
 	}
 }
