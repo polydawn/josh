@@ -87,7 +87,7 @@ public class Opts {
 	}
 
 	public Opts in_null() {
-		this.in = new ByteArrayInputStream(new byte[0]);
+		this.in = new ClosedInputStream();
 		return this;
 	}
 
@@ -95,6 +95,8 @@ public class Opts {
 		this.in = System.in;
 		return this;
 	}
+
+
 
 	static class InputStringer extends InputStream {
 		public InputStringer(Queue<String> source) {
@@ -138,6 +140,30 @@ public class Opts {
 			super.close();
 		}
 	}
+
+
+
+	static class ClosedInputStream extends InputStream {
+		public int available() {
+			return 0;
+		}
+
+		public int read() {
+			return -1;
+		}
+
+		public int read(byte[] b) {
+			return -1;
+		}
+
+		public int read(byte[] b, int off, int len) {
+			return -1;
+		}
+
+		public void close() {}
+	}
+
+
 
 	// it's really embarassing how golang had all these awesome options for getting data back out, and in java it's kinda fuck you.
 
