@@ -129,18 +129,19 @@ public class Josh {
 		cmdarray[0] = cmd;
 		for (int i = 1; i < cmdarray.length; i++)
 			cmdarray[i] = args.get(i-1);
-		String[] envp = new String[env.size()];
-		int i = 0;
-		for (Map.Entry<String,String> pair : env.entrySet())
-			envp[i++] = pair.getKey()+"="+pair.getValue();
-		final Process proc = Runtime.getRuntime().exec(cmdarray, envp, cwd);
-		// going through a ProcessBuilder will enable some cheats that will probably make output to a file faster (fewer memcpy).
-		// but it doesn't *actually* let you connect the real system (glhf getting a tty through).
-		// and it won't help a bit for in-process.  you still have to launch a bunch of shitty threads to do shitty blocking io.
-		// so fuck that.
-		if (opts.in != null) iocopy(opts.in, proc.getOutputStream());
-		if (opts.out != null) iocopy(proc.getInputStream(), opts.out);
-		if (opts.err != null) iocopy(proc.getErrorStream(), opts.err);
+
+		ProcessBuilder bother = new ProcessBuilder().command(cmdarray);
+		bother.environment().clear(); // fuck whoever made this interface
+		bother.environment().putAll(env);
+		bother.directory(cwd);
+		bother.redirectInput(opts.in == System.in ? ProcessBuilder.Redirect.INHERIT : ProcessBuilder.Redirect.PIPE);
+		bother.redirectOutput(opts.out == System.out ? ProcessBuilder.Redirect.INHERIT : ProcessBuilder.Redirect.PIPE);
+		bother.redirectError(opts.err == System.err ? ProcessBuilder.Redirect.INHERIT : ProcessBuilder.Redirect.PIPE);
+		final Process proc = bother.start();
+		if (opts.in != System.in) iocopy(opts.in, proc.getOutputStream());
+		if (opts.out != System.out) iocopy(proc.getInputStream(), opts.out);
+		if (opts.err != System.err) iocopy(proc.getErrorStream(), opts.err);
+
 		FutureTask<Integer> answer = new FutureTask<Integer>(new Callable<Integer>() {
 			public Integer call() throws Exception {
 				int exitCode = proc.waitFor();
