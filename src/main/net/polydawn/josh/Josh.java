@@ -162,6 +162,14 @@ public class Josh {
 			}
 			return;
 		}
+		if (in instanceof Opts.ClosedInputStream) {
+			try {
+				out.close();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			return;
+		}
 		new Thread() { public void run() {
 			try {
 				byte[] buf = new byte[1024*8]; int k;
@@ -173,6 +181,11 @@ public class Josh {
 				e.printStackTrace();
 				try {
 					in.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				try {
+					out.close();
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}

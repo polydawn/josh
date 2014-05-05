@@ -92,7 +92,7 @@ public class Opts {
 	}
 
 	public Opts in_pass() {
-		this.in = System.in;
+		this.in = new UnclosableInputStreamProxy(System.in);
 		return this;
 	}
 
@@ -165,6 +165,64 @@ public class Opts {
 
 
 
+	static class UnclosableInputStreamProxy extends InputStream {
+		public UnclosableInputStreamProxy(InputStream delegate) {
+			this.delegate = delegate;
+		}
+
+		final InputStream delegate;
+
+		public int read() throws IOException {
+			return this.delegate.read();
+		}
+
+		public int hashCode() {
+			return this.delegate.hashCode();
+		}
+
+		public int read(byte[] b) throws IOException {
+			return this.delegate.read(b);
+		}
+
+		public boolean equals(Object obj) {
+			return this.delegate.equals(obj);
+		}
+
+		public int read(byte[] b, int off, int len) throws IOException {
+			return this.delegate.read(b, off, len);
+		}
+
+		public long skip(long n) throws IOException {
+			return this.delegate.skip(n);
+		}
+
+		public String toString() {
+			return this.delegate.toString();
+		}
+
+		public int available() throws IOException {
+			return this.delegate.available();
+		}
+
+		public void close() {
+			// nope!
+		}
+
+		public synchronized void mark(int readlimit) {
+			this.delegate.mark(readlimit);
+		}
+
+		public synchronized void reset() throws IOException {
+			this.delegate.reset();
+		}
+
+		public boolean markSupported() {
+			return this.delegate.markSupported();
+		}
+	}
+
+
+
 	// it's really embarassing how golang had all these awesome options for getting data back out, and in java it's kinda fuck you.
 
 	public Opts out(OutputStream newOutput) {
@@ -206,7 +264,7 @@ public class Opts {
 	}
 
 	public Opts out_pass() {
-		this.out = System.out;
+		this.out = new UnclosableOutputStreamProxy(System.out);
 		return this;
 	}
 
@@ -251,7 +309,7 @@ public class Opts {
 	}
 
 	public Opts err_pass() {
-		this.err = System.err;
+		this.err = new UnclosableOutputStreamProxy(System.err);
 		return this;
 	}
 
@@ -361,5 +419,47 @@ public class Opts {
 		public void flush() throws IOException {}
 
 		public void close() throws IOException {}
+	}
+
+
+
+	static class UnclosableOutputStreamProxy extends OutputStream {
+		public UnclosableOutputStreamProxy(OutputStream delegate) {
+			this.delegate = delegate;
+		}
+
+		final OutputStream delegate;
+
+		public void write(int b) throws IOException {
+			this.delegate.write(b);
+		}
+
+		public int hashCode() {
+			return this.delegate.hashCode();
+		}
+
+		public void write(byte[] b) throws IOException {
+			this.delegate.write(b);
+		}
+
+		public void write(byte[] b, int off, int len) throws IOException {
+			this.delegate.write(b, off, len);
+		}
+
+		public boolean equals(Object obj) {
+			return this.delegate.equals(obj);
+		}
+
+		public void flush() throws IOException {
+			this.delegate.flush();
+		}
+
+		public void close() {
+			// nope!
+		}
+
+		public String toString() {
+			return this.delegate.toString();
+		}
 	}
 }
