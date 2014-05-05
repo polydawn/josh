@@ -201,6 +201,11 @@ public class Opts {
 	//}
 
 	public Opts out_null() {
+		this.out = new NullOutputStream();
+		return this;
+	}
+
+	public Opts out_closed() {
 		this.out = new ClosedOutputStream();
 		return this;
 	}
@@ -246,6 +251,11 @@ public class Opts {
 	//}
 
 	public Opts err_null() {
+		this.err = new NullOutputStream();
+		return this;
+	}
+
+	public Opts err_closed() {
 		this.err = new ClosedOutputStream();
 		return this;
 	}
@@ -357,6 +367,20 @@ public class Opts {
 		public void write(byte[] b, int off, int len) throws IOException {
 			throw new IOException("closed");
 		}
+
+		public void flush() throws IOException {}
+
+		public void close() throws IOException {}
+	}
+
+
+
+	static class NullOutputStream extends OutputStream {
+		public void write(int b) throws IOException {}
+
+		public void write(byte[] b) throws IOException {}
+
+		public void write(byte[] b, int off, int len) throws IOException {}
 
 		public void flush() throws IOException {}
 
