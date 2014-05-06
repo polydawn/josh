@@ -345,7 +345,8 @@ public class Opts {
 		}
 
 		public void close() throws IOException {
-			push();
+			if (buffer.size() > 0)
+				push();
 		}
 	}
 
