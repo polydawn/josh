@@ -1,3 +1,8 @@
 [submodule "lib/exus-build"]
 	path = lib/exus-build
 	url = https://github.com/heavenlyhash/exus-build.git
+[submodule "releases"]
+	path = releases
+	url = http://mdm-releases.com/net.polydawn/josh-releases.git
+	mdm = releases
+	update = none
