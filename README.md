@@ -28,6 +28,7 @@ Example:
 ```
 
 The example shows:
+
 1.  executing git
 2.  giving it some arguments
 3.  setting a working directory
