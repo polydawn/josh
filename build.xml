@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE ant-project>
+<project name="josh" basedir="." default="dist">
+	<description>
+		joshing around with java shellishing.
+	</description>
+	<property name="app" value="${ant.project.name}"/>
+
+
+	<exec executable="git" failonerror="true">
+		<arg value="submodule"/>
+		<arg value="update"/>
+		<arg value="--init"/>
+		<arg value="lib/exus-build"/>
+	</exec>
+	<import file="lib/exus-build/build-exultant.xml"/>
+	<import file="lib/exus-build/build-exultant-java.xml"/>
+	<import file="lib/exus-build/bootstrap-mdm.xml"/>
+
+
+	<target name="bootstrap"
+		depends="-bootstrap-mdm-modules">
+	</target>
+
+
+	<target name="init"
+		depends="exusInit,bootstrap">
+	</target>
+
+
+	<path id="app.path.deps.main.compile" cache="true">
+	</path>
+	<path id="app.path.deps.main.runtime" cache="true">
+	</path>
+	<path id="app.path.main.compile" cache="true">
+		<path refid="app.path.deps.main.compile" />
+		<pathelement location="${target.javac}/main" />
+	</path>
+	<path id="app.path.main.runtime" cache="true">
+		<path refid="app.path.main.compile" />
+		<path refid="app.path.deps.main.runtime" />
+		<pathelement location="${src}/conf/"/>
+	</path>
+	<path id="app.path.deps.test.compile" cache="true">
+		<path refid="app.path.main.compile" />
+		<pathelement location="${lib}/junit/junit.jar"/>
+		<pathelement location="${target.javac}/test-fixtures" />
+	</path>
+	<path id="app.path.deps.test.runtime" cache="true">
+	</path>
+	<path id="app.path.test.compile" cache="true">
+		<path refid="app.path.deps.test.compile" />
+		<pathelement location="${target.javac}/test-unit" />
+		<pathelement location="${target.javac}/test-integration" />
+	</path>
+	<path id="app.path.test.runtime" cache="true">
+		<path refid="app.path.test.compile" />
+		<path refid="app.path.deps.test.runtime" />
+	</path>
+
+
+	<target name="compile"
+		depends="init"
+		description="compile the source"
+		>
+		<exusJavacStrict
+			classes="net/polydawn/josh/**"
+			>
+			<classpath refid="app.path.deps.main.compile" />
+		</exusJavacStrict>
+	</target>
+
+
+	<target name="dist"
+		depends="compile"
+		description="pack distributable artifacts"
+		>
+		<exusPack destfile="${dist}/${app}.jar">
+			<fileset file="${target.javac}/main/**"/>
+		</exusPack>
+	</target>
+
+
+	<target name="clean"
+		description="clean up">
+		<delete dir="${target}"/>
+	</target>
+
+
+	<target name="compile-test"
+		depends="compile"
+		>
+		<exusJavac
+			tree="test-fixtures"
+			depends="${toString:app.path.deps.test.compile}"
+		/>
+		<exusJavac
+			tree="test-unit"
+			depends="${toString:app.path.deps.test.compile}"
+		/>
+		<exusJavac
+			tree="test-integration"
+			depends="${toString:app.path.deps.test.compile}"
+		/>
+	</target>
+
+
+	<target name="run-test"
+		depends="compile, compile-test"
+		description="runs junit tests"
+		>
+		<property name="test.dir" value="${java.io.tmpdir}/${app}-test"/>
+		<mkdir dir="${test.dir}"/>
+		<junit printsummary="off" haltonfailure="yes" dir="${test.dir}" newenvironment="true">
+			<formatter type="plain" usefile="false" />
+			<classpath refid="app.path.test.runtime"/>
+			<batchtest fork="yes">
+				<fileset dir="${target.javac}/test-unit">
+					<include name="**/*Test*.class"/>
+				</fileset>
+				<fileset dir="${target.javac}/test-integration">
+					<include name="**/*Test*.class"/>
+				</fileset>
+			</batchtest>
+		</junit>
+	</target>
+</project>
