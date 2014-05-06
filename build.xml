@@ -124,4 +124,13 @@
 			</batchtest>
 		</junit>
 	</target>
+
+
+	<target name="release" depends="clean, dist">
+		<exec executable="mdm">
+			<arg value="release" />
+			<arg value="--version=${version}" />
+			<arg value="--files=${dist}" />
+		</exec>
+	</target>
 </project>
