@@ -138,13 +138,16 @@ public class Josh {
 		bother.redirectOutput(opts.out == System.out ? ProcessBuilder.Redirect.INHERIT : ProcessBuilder.Redirect.PIPE);
 		bother.redirectError(opts.err == System.err ? ProcessBuilder.Redirect.INHERIT : ProcessBuilder.Redirect.PIPE);
 		final Process proc = bother.start();
-		if (opts.in != System.in) iocopy(opts.in, proc.getOutputStream());
-		if (opts.out != System.out) iocopy(proc.getInputStream(), opts.out);
-		if (opts.err != System.err) iocopy(proc.getErrorStream(), opts.err);
+		final Thread incopier  = (opts.in  != System.in ) ? iocopy(opts.in, proc.getOutputStream()) : null;
+		final Thread outcopier = (opts.out != System.out) ? iocopy(proc.getInputStream(), opts.out) : null;
+		final Thread errcopier = (opts.err != System.err) ? iocopy(proc.getErrorStream(), opts.err) : null;
 
 		FutureTask<Integer> answer = new FutureTask<Integer>(new Callable<Integer>() {
 			public Integer call() throws Exception {
 				int exitCode = proc.waitFor();
+				if (incopier  != null) incopier.join();
+				if (outcopier != null) outcopier.join();
+				if (errcopier != null) errcopier.join();
 				if (!okExit.contains(exitCode))
 					throw new ExecutionException("executing \""+cmd+"\" returned code "+exitCode, null);
 				return exitCode;
@@ -154,14 +157,14 @@ public class Josh {
 		return answer;
 	}
 
-	private static void iocopy(final InputStream in, final OutputStream out) {
+	private static Thread iocopy(final InputStream in, final OutputStream out) {
 		if (out instanceof Opts.ClosedOutputStream) {
 			try {
 				in.close();
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
-			return;
+			return null;
 		}
 		if (in instanceof Opts.ClosedInputStream) {
 			try {
@@ -169,9 +172,9 @@ public class Josh {
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
-			return;
+			return null;
 		}
-		new Thread() { public void run() {
+		Thread t = new Thread() { public void run() {
 			try {
 				byte[] buf = new byte[1024*8]; int k;
 				while ((k = in.read(buf)) != -1) {
@@ -191,6 +194,8 @@ public class Josh {
 					e1.printStackTrace();
 				}
 			}
-		}}.start();
+		}};
+		t.start();
+		return t;
 	}
 }
