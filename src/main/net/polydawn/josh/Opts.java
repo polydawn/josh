@@ -321,7 +321,7 @@ public class Opts {
 			} else {
 				for (int i = 0; i < len; i++) {
 					byte a = b[off + i];
-					write(a);
+					buffer.write(a);
 					if (a == breakByte)
 						push();
 				}
