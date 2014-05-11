@@ -26,23 +26,46 @@ public class WithCwd implements AutoCloseable {
 
 
 	/**
-	 * Creates a random temporary directory under {@link #tmp}.
+	 * Creates a random temporary directory under {@link #tmp}, by the same mechanisms
+	 * as {@link #temp(File)}.
 	 */
 	public static WithCwd temp() {
-		try {
-			return new WithCwd(createUniqueTempFolder().getCanonicalFile());
-		} catch (IOException e) {
-			throw new Error("cwd?", e);
-		}
+		return temp(tmp);
 	}
 
-	static File createUniqueTempFolder() {
-		while (true) {
-			File f = new File(tmp, UUID.randomUUID().toString());
-			if (f.mkdirs()) {
-				tmpdirs.add(f);
-				return f;
+	public static WithCwd temp(File basedir) {
+		return temp(basedir, "", false);
+	}
+
+	public static WithCwd temp(boolean deleteOnClose) {
+		return temp(tmp, deleteOnClose);
+	}
+
+	public static WithCwd temp(File basedir, boolean deleteOnClose) {
+		return temp(basedir, "", deleteOnClose);
+	}
+
+	public static WithCwd temp(File basedir, String prefix) {
+		return temp(basedir, prefix, false);
+	}
+
+	/**
+	 * Creates a random temporary directory under {@code basedir}.
+	 * <p>
+	 * A best-effort attempt will be made to unlink all of temporary paths when the
+	 * program exits.
+	 */
+	public static WithCwd temp(File basedir, String prefix, boolean deleteOnClose) {
+		try {
+			while (true) {
+				File f = new File(basedir, prefix+UUID.randomUUID().toString()).getCanonicalFile();
+				if (f.mkdirs()) {
+					tmpdirs.add(f);
+					return new WithCwd(f, deleteOnClose);
+				}
 			}
+		} catch (IOException e) {
+			throw new Error("cwd?", e);
 		}
 	}
 
