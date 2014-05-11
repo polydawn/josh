@@ -1,15 +1,23 @@
 package net.polydawn.josh;
 
 import java.io.*;
-import java.nio.file.*;
 import java.util.*;
 
 public class WithCwd implements AutoCloseable {
 	public WithCwd(String relPath) {
-		this(new File(relPath));
+		this(new File(relPath), false);
 	}
 
 	public WithCwd(File relPath) {
+		this(relPath, false);
+	}
+
+	public WithCwd(String relPath, boolean deleteOnClose) {
+		this(new File(relPath), deleteOnClose);
+	}
+
+	public WithCwd(File relPath, boolean deleteOnClose) {
+		this.deleteOnClose = deleteOnClose;
 		popDir = new File(System.getProperties().getProperty("user.dir"));
 		pushedDir = relPath.isAbsolute() ? relPath : new File(popDir, relPath.toString());
 		pushedDir.mkdirs();
@@ -57,6 +65,7 @@ public class WithCwd implements AutoCloseable {
 
 	final File pushedDir;
 	final File popDir;
+	final boolean deleteOnClose;
 
 	private void cd(File dir) {
 		System.getProperties().setProperty("user.dir", dir.toString());
@@ -64,6 +73,7 @@ public class WithCwd implements AutoCloseable {
 
 	public void close() {
 		cd(popDir);
+		if (deleteOnClose) delete(pushedDir);
 	}
 
 	public void clear() {
