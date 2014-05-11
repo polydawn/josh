@@ -8,5 +8,6 @@ public class WithCwdCleanupTest {
 			new File("left").getCanonicalFile().mkdir();
 			new File("right").getCanonicalFile().mkdir();
 		}
+		// should be no pants
 	}
 }
