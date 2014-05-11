@@ -70,7 +70,7 @@ public class WithCwd implements AutoCloseable {
 	}
 
 
-	static final File tmp = new File(System.getProperty("java.io.tmpdir"));
+	public static final File tmp = new File(System.getProperty("java.io.tmpdir"));
 	private static final List<File> tmpdirs = new ArrayList<File>();
 	private static final boolean keep = !System.getProperty("keep-tmpdir", "false").equals("false");
 	static {
