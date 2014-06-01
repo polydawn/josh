@@ -152,7 +152,12 @@ public class Josh {
 		ProcessBuilder bother = new ProcessBuilder().command(cmdarray);
 		bother.environment().clear(); // fuck whoever made this interface
 		bother.environment().putAll(env);
-		bother.directory(cwd);
+		if (cwd == null) {
+			// this is a hack based on the fact the getCanonicalFile resolver actually pays attention to the system property for 'user.dir', which IMO the ProcessBuilder should for consistency, but doesnt.
+			bother.directory(new File("").getCanonicalFile());
+		} else {
+			bother.directory(cwd);
+		}
 		bother.redirectInput(opts.in == System.in ? ProcessBuilder.Redirect.INHERIT : ProcessBuilder.Redirect.PIPE);
 		bother.redirectOutput(opts.out == System.out ? ProcessBuilder.Redirect.INHERIT : ProcessBuilder.Redirect.PIPE);
 		bother.redirectError(opts.err == System.err ? ProcessBuilder.Redirect.INHERIT : ProcessBuilder.Redirect.PIPE);
