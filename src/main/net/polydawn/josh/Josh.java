@@ -59,7 +59,7 @@ public class Josh {
 	private Opts opts;
 
 	/**
-	 * Exit status codes that are to be considered "successful".  If not provided, [0] is the default.
+	 * Exit status codes that are to be considered "successful".  If null, no exit code will cause throws.
 	 * (If this slice is provided, zero will -not- be considered a success code unless explicitly included.)
 	 */
 	private List<Integer> okExit;
@@ -143,6 +143,12 @@ public class Josh {
 		return next;
 	}
 
+	public Josh okExitAny() {
+		Josh next = new Josh(this);
+		next.okExit = null;
+		return next;
+	}
+
 	public Future<Integer> start() throws IOException {
 		String[] cmdarray = new String[args.size()+1];
 		cmdarray[0] = cmd;
@@ -172,7 +178,7 @@ public class Josh {
 				if (incopier  != null) incopier.join();
 				if (outcopier != null) outcopier.join();
 				if (errcopier != null) errcopier.join();
-				if (!okExit.contains(exitCode))
+				if (okExit != null && !okExit.contains(exitCode))
 					throw new ExecutionException("executing \""+cmd+"\" returned code "+exitCode, null);
 				return exitCode;
 			}
