@@ -130,13 +130,6 @@ public class Josh {
 		return next;
 	}
 
-	public Josh okExit(int... newOkExit) {
-		Integer[] z = new Integer[newOkExit.length];
-		for (int y = 0; y < newOkExit.length; y++)
-			z[y] = newOkExit[y];
-		return okExit(z);
-	}
-
 	public Josh okExit(Integer... newOkExit) {
 		Josh next = new Josh(this);
 		next.okExit = Collections.unmodifiableList(Arrays.asList(newOkExit));
