@@ -150,7 +150,7 @@ public class Josh {
 			cmdarray[i] = args.get(i-1);
 
 		ProcessBuilder bother = new ProcessBuilder().command(cmdarray);
-		bother.environment().clear(); // fuck whoever made this interface
+		bother.environment().clear();
 		bother.environment().putAll(env);
 		if (cwd == null) {
 			// this is a hack based on the fact the getCanonicalFile resolver actually pays attention to the system property for 'user.dir', which IMO the ProcessBuilder should for consistency, but doesnt.
