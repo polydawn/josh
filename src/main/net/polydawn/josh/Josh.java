@@ -157,20 +157,21 @@ public class Josh {
 		} else {
 			bother.directory(cwd);
 		}
-		// This doesn't actually work very well in all cases.
+		// This whole thing with the difference between Magic{Input/Output}Stream and System.{in/out/err} is a complete clusterfuck.
 		// These static `System.*` fields -- never mind that they're final -- can be changed at runtime.  JUnit, for example, does this.
 		// And THERE'S NO FUCKING WAY TO TELL IF SOMEONE HAS DONE THIS TO YOU.
 		// Meanwhile, ProcessBuilder TAKES A COMPLETELY DIFFERENT ROUTE through the filedescriptors, which totally disregards what happened to System.in/out/err.
 		// None of this API is exposed in any way that values can be compared to System.in/out/err.
 		// There's literally no way to tell if System.in and FileDescriptor(0) are the same thing.  Meditate on that for a moment.
 		// Great, guys.  Fucking fine grade-A API.  Totally fucking reasonable.
-		bother.redirectInput(opts.in == System.in ? ProcessBuilder.Redirect.INHERIT : ProcessBuilder.Redirect.PIPE);
-		bother.redirectOutput(opts.out == System.out ? ProcessBuilder.Redirect.INHERIT : ProcessBuilder.Redirect.PIPE);
-		bother.redirectError(opts.err == System.err ? ProcessBuilder.Redirect.INHERIT : ProcessBuilder.Redirect.PIPE);
+		// So, we have no choice but to expose that all the way through to the userland API of Josh and let the consumer decide which route is least fucked for them.
+		bother.redirectInput( opts.in  instanceof Opts.MagicInputStream  ? ProcessBuilder.Redirect.INHERIT : ProcessBuilder.Redirect.PIPE);
+		bother.redirectOutput(opts.out instanceof Opts.MagicOutputStream ? ProcessBuilder.Redirect.INHERIT : ProcessBuilder.Redirect.PIPE);
+		bother.redirectError( opts.err instanceof Opts.MagicOutputStream ? ProcessBuilder.Redirect.INHERIT : ProcessBuilder.Redirect.PIPE);
 		final Process proc = bother.start();
-		final Thread incopier  = (opts.in  != System.in ) ? iocopy(opts.in, proc.getOutputStream()) : null;
-		final Thread outcopier = (opts.out != System.out) ? iocopy(proc.getInputStream(), opts.out) : null;
-		final Thread errcopier = (opts.err != System.err) ? iocopy(proc.getErrorStream(), opts.err) : null;
+		final Thread incopier  = (opts.in  instanceof Opts.MagicInputStream)  ? iocopy(opts.in, proc.getOutputStream()) : null;
+		final Thread outcopier = (opts.out instanceof Opts.MagicOutputStream) ? iocopy(proc.getInputStream(), opts.out) : null;
+		final Thread errcopier = (opts.err instanceof Opts.MagicOutputStream) ? iocopy(proc.getErrorStream(), opts.err) : null;
 
 		FutureTask<Integer> answer = new FutureTask<Integer>(new Callable<Integer>() {
 			public Integer call() throws Exception {

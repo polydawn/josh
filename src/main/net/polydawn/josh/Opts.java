@@ -27,12 +27,29 @@ import java.util.*;
 public class Opts {
 	public Opts() {}
 
+	/**
+	 * Routes input, output, and err channels through {@link System#in},
+	 * {@link System#out}, and {@link System#err}.
+	 */
 	public static final Opts DefaultIO = new Opts() {{
 		in_pass();
 		out_pass();
 		err_pass();
 	}};
 
+	/**
+	 * Applies "direct" input, output, and err channels. If you wish to use TTYs in
+	 * your application, you will probably want this.
+	 */
+	public static final Opts DirectIO = new Opts() {{
+		in_direct();
+		out_direct();
+		err_direct();
+	}};
+
+	/**
+	 * Routes input, output, and err channels to /dev/null.
+	 */
 	public static final Opts NullIO = new Opts() {{
 		in_null();
 		out_null();
@@ -115,6 +132,16 @@ public class Opts {
 		return this;
 	}
 
+	/**
+	 * Force use of ProcessBuilder.Redirect.INHERIT instead of shuttling bytes through
+	 * an InputStream. This allows use of a TTY, but will not observe any changes to
+	 * the JVM's value of {@link System#in}.
+	 */
+	public Opts in_direct() {
+		this.in = new MagicInputStream();
+		return this;
+	}
+
 
 
 	static class InputStringer extends InputStream {
@@ -163,6 +190,28 @@ public class Opts {
 
 
 	static class ClosedInputStream extends InputStream {
+		public int available() {
+			return 0;
+		}
+
+		public int read() {
+			return -1;
+		}
+
+		public int read(byte[] b) {
+			return -1;
+		}
+
+		public int read(byte[] b, int off, int len) {
+			return -1;
+		}
+
+		public void close() {}
+	}
+
+
+
+	static class MagicInputStream extends InputStream {
 		public int available() {
 			return 0;
 		}
@@ -234,6 +283,16 @@ public class Opts {
 		return this;
 	}
 
+	/**
+	 * Force use of ProcessBuilder.Redirect.INHERIT instead of shuttling bytes through
+	 * an OutputStream. This allows use of a TTY, but will not observe any changes to
+	 * the JVM's value of {@link System#out}.
+	 */
+	public Opts out_direct() {
+		this.out = new MagicOutputStream();
+		return this;
+	}
+
 	// and now all the same for stderr
 
 	public Opts err(OutputStream newErrput) {
@@ -281,6 +340,16 @@ public class Opts {
 
 	public Opts err_pass() {
 		this.err = System.err;
+		return this;
+	}
+
+	/**
+	 * Force use of ProcessBuilder.Redirect.INHERIT instead of shuttling bytes through
+	 * an OutputStream. This allows use of a TTY, but will not observe any changes to
+	 * the JVM's value of {@link System#err}.
+	 */
+	public Opts err_direct() {
+		this.err = new MagicOutputStream();
 		return this;
 	}
 
@@ -396,6 +465,20 @@ public class Opts {
 
 
 	static class NullOutputStream extends OutputStream {
+		public void write(int b) throws IOException {}
+
+		public void write(byte[] b) throws IOException {}
+
+		public void write(byte[] b, int off, int len) throws IOException {}
+
+		public void flush() throws IOException {}
+
+		public void close() throws IOException {}
+	}
+
+
+
+	static class MagicOutputStream extends OutputStream {
 		public void write(int b) throws IOException {}
 
 		public void write(byte[] b) throws IOException {}
