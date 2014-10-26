@@ -169,9 +169,9 @@ public class Josh {
 		bother.redirectOutput(opts.out instanceof Opts.MagicOutputStream ? ProcessBuilder.Redirect.INHERIT : ProcessBuilder.Redirect.PIPE);
 		bother.redirectError( opts.err instanceof Opts.MagicOutputStream ? ProcessBuilder.Redirect.INHERIT : ProcessBuilder.Redirect.PIPE);
 		final Process proc = bother.start();
-		final Thread incopier  = (opts.in  instanceof Opts.MagicInputStream)  ? iocopy(opts.in, proc.getOutputStream()) : null;
-		final Thread outcopier = (opts.out instanceof Opts.MagicOutputStream) ? iocopy(proc.getInputStream(), opts.out) : null;
-		final Thread errcopier = (opts.err instanceof Opts.MagicOutputStream) ? iocopy(proc.getErrorStream(), opts.err) : null;
+		final Thread incopier  = !(opts.in  instanceof Opts.MagicInputStream)  ? iocopy(opts.in, proc.getOutputStream()) : null;
+		final Thread outcopier = !(opts.out instanceof Opts.MagicOutputStream) ? iocopy(proc.getInputStream(), opts.out) : null;
+		final Thread errcopier = !(opts.err instanceof Opts.MagicOutputStream) ? iocopy(proc.getErrorStream(), opts.err) : null;
 
 		FutureTask<Integer> answer = new FutureTask<Integer>(new Callable<Integer>() {
 			public Integer call() throws Exception {
