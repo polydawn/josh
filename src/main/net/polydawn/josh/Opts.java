@@ -31,6 +31,8 @@ public class Opts {
 	 * Routes input, output, and err channels through {@link System#in},
 	 * {@link System#out}, and {@link System#err}.
 	 */
+	// FIXME: no, really: the reason this is fucked in the first place is that this lets the subprocess close the output streams.
+	// FIXME: which, somehow, miraculously, (and I can't even figure out how to write tests for this) causes proc.waitFor to HANG if run in eclipse's console.
 	public static final Opts DefaultIO = new Opts() {{
 		in_pass();
 		out_pass();
