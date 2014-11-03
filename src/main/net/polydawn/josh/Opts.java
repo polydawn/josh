@@ -130,7 +130,7 @@ public class Opts {
 	}
 
 	public Opts in_pass() {
-		this.in = System.in;
+		this.in = new UnclosableInputStream(System.in);
 		return this;
 	}
 
@@ -213,6 +213,68 @@ public class Opts {
 
 
 
+	/**
+	 * Used to proxy System.in but silently ignore close operations (closing System.in
+	 * can cause Strange Things To Happen).
+	 */
+	static class UnclosableInputStream extends InputStream {
+		public UnclosableInputStream(InputStream delegate) {
+			this.delegate = delegate;
+		}
+
+		private final InputStream delegate;
+
+		public void close() {}
+
+		// delegate methods:
+
+		public int read() throws IOException {
+			return this.delegate.read();
+		}
+
+		public int hashCode() {
+			return this.delegate.hashCode();
+		}
+
+		public int read(byte[] b) throws IOException {
+			return this.delegate.read(b);
+		}
+
+		public boolean equals(Object obj) {
+			return this.delegate.equals(obj);
+		}
+
+		public int read(byte[] b, int off, int len) throws IOException {
+			return this.delegate.read(b, off, len);
+		}
+
+		public long skip(long n) throws IOException {
+			return this.delegate.skip(n);
+		}
+
+		public String toString() {
+			return this.delegate.toString();
+		}
+
+		public int available() throws IOException {
+			return this.delegate.available();
+		}
+
+		public synchronized void mark(int readlimit) {
+			this.delegate.mark(readlimit);
+		}
+
+		public synchronized void reset() throws IOException {
+			this.delegate.reset();
+		}
+
+		public boolean markSupported() {
+			return this.delegate.markSupported();
+		}
+	}
+
+
+
 	static class MagicInputStream extends InputStream {
 		public int available() {
 			return 0;
@@ -281,7 +343,7 @@ public class Opts {
 	}
 
 	public Opts out_pass() {
-		this.out = System.out;
+		this.out = new UnclosableOutputStream(System.out);
 		return this;
 	}
 
@@ -341,7 +403,7 @@ public class Opts {
 	}
 
 	public Opts err_pass() {
-		this.err = System.err;
+		this.err = new UnclosableOutputStream(System.err);
 		return this;
 	}
 
@@ -476,6 +538,52 @@ public class Opts {
 		public void flush() throws IOException {}
 
 		public void close() throws IOException {}
+	}
+
+
+
+	/**
+	 * Used to proxy System.out/err but silently ignore close operations (closing
+	 * System.out/err can cause Strange Things To Happen).
+	 */
+	static class UnclosableOutputStream extends OutputStream {
+		public UnclosableOutputStream(OutputStream delegate) {
+			this.delegate = delegate;
+		}
+
+		private final OutputStream delegate;
+
+		public void close() {}
+
+		// delegate methods:
+
+		public void write(int b) throws IOException {
+			this.delegate.write(b);
+		}
+
+		public int hashCode() {
+			return this.delegate.hashCode();
+		}
+
+		public void write(byte[] b) throws IOException {
+			this.delegate.write(b);
+		}
+
+		public void write(byte[] b, int off, int len) throws IOException {
+			this.delegate.write(b, off, len);
+		}
+
+		public boolean equals(Object obj) {
+			return this.delegate.equals(obj);
+		}
+
+		public void flush() throws IOException {
+			this.delegate.flush();
+		}
+
+		public String toString() {
+			return this.delegate.toString();
+		}
 	}
 
 
